@@ -1,0 +1,30 @@
+/* TODO list
+	- z/x zoom keys don't zoom in/out at right coordinates
+	- slight px jump when mouseup event re-renders
+*/
+
+/* Performance notes
+	1. modifying points by .5 vs translating canvas by .5 is 4ms faster with 25k lines
+	5. Single largest boost (1600%) is from batching lineto/moveto and doing stroke at the end
+	6. MultiPoly seem to be slightly more expensive than MultiLine. Could I convert everything to lines?
+	- Thought? Are lines more expensive than multiline? Should I convert everything to a custom format?
+	7. Caching in for loops does not help in Chrome or Firefox, but are 2x improvements in Safari and IE
+	8. Switches are still good to optimize for non Chrome browsers: http://jsperf.com/switch-vs-if-1
+	http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/
+	9. No sense in messing with data by removing spaces, '-', etc. due to how JS stores objects in heap
+	*/
+
+There are only a few ways of local files in a browser, and none of them are optimal:
+1) File API using input, DnD, or canvas
+2) Altering the JSON file to be a JavaScript file that loads itself as a global variable
+3) Async loading using a local web server
+4) nw.js node bridge?
+
+
+
+HOW TO CONVERT CONUS RASTER
+1) gdalwarp to change proj to 3857
+2) convert from GeoTiff to PNG
+3) Current TL: -16500000, 7900000
+4) Current BR: -4400000, 780000
+5) Current center: -10450000, 4340000 or 36.285665258621016, -93.87394719049

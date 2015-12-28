@@ -59,7 +59,7 @@ mapElement.style.width = viewportElement.clientWidth + mapViewportPadding + 'px'
 mapElement.style.height = viewportElement.clientHeight + mapViewportPadding + 'px';
 centerLayersOnViewport();
 
-var zoom = 9;
+var zoom = 6;
 var zoomScale = [
 	156412, 78206, 39103, 19551, 9776, 4888, 2444, 1222, 610.984, 305.492,
 	152.746, 76.373, 38.187, 19.093, 9.547, 4.773, 2.387, 1.193, 0.596, 0.298
@@ -121,12 +121,8 @@ function tweakTerrainOffset(input, dimension) {
 			else { return input - 2; }
 			break;
 		case 7:
-			if (dimension === 'x') { return input - 8; }
-			else { return input - 3; }
-			break;
-		case 8:
-			if (dimension === 'x') { return input - 12; }
-			else { return input - 4; }
+			if (dimension === 'x') { return input - 7; }
+			else { return input - 2; }
 			break;
 		default:
 			return input;
@@ -134,7 +130,7 @@ function tweakTerrainOffset(input, dimension) {
 }
 
 function alignTerrainWithLayerContainer() {
-	if (zoom > 8) {
+	if (zoom > 7) {
 		terrainElement.style.display = 'none';
 		return;
 	}

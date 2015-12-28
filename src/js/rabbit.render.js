@@ -61,81 +61,20 @@ function renderCities() {
 
 	var citiesToRender = [];
 	var city, point, filterFunction = function() { return true; }, statePoints, cityLimit, cityCount;
+	testPops = [];
 
-	switch (zoom) {
-		case 4:
-			cityLimit = 1;
-			filterFunction = function(checkCity) {
-				if (checkCity.zoom < zoom || (cityCount < cityLimit && checkCity.pop >= 1500000)) {
-					cityCount++;
-					return true;
-				}
-				return false;
-			};
-			break;
-		case 5:
-			cityLimit = 1;
-			filterFunction = function(checkCity) {
-				if (cityCount < cityLimit && checkCity.pop >= 350000) {
-					cityCount++;
-					return true;
-				}
-				return false;
-			};
-			break;
-		case 6:
-			cityLimit = 2;
-			filterFunction = function(checkCity) {
-				if (cityCount < cityLimit && checkCity.pop >= 200000) {
-					cityCount++;
-					return true;
-				}
-				return false;
-			};
-			break;
-		case 7:
-			cityLimit = 10;
-			filterFunction = function(checkCity) {
-				if (cityCount < cityLimit && checkCity.pop >= 100000) {
-					cityCount++;
-					return true;
-				}
-				return false;
-			};
-			break;
-		case 8:
-			filterFunction = function(checkCity) {
-				return checkCity.rank > 0;
-			}
-			break;
-		case 9:
-			filterFunction = function(checkCity) {
-				return checkCity.rank > 0 || checkCity.pop > 5000;
-			}
-			break;
-	}
-
-	for (state in visibleStates) {
-		cityCount = 0;
+	for (var state in visibleStates) {
 		statePoints = cities[visibleStates[state]];
 		for (i = 0; i < statePoints.length; i++) {
 			city = statePoints[i];
-			// Zoom overrides
-			if (city.zoom) {
-				if (zoom < city.zoom) { 
-					continue;
-				} else {
-					citiesToRender.push(statePoints[i]);
-				}
-			} else {
-				if (filterFunction(statePoints[i])) {
-					citiesToRender.push(statePoints[i]);
-				}
+			if (city.zoom <= zoom) {
+				citiesToRender.push(statePoints[i]);
+				testPops.push(statePoints[i].pop);
 			}
 		}
 	}
 
-	ctx.font = '9px Roboto';
+	ctx.font = '10px Roboto';
 	ctx.fillStyle = '#fff';
 	for (i = 0; i < citiesToRender.length; i++) {
 		city = citiesToRender[i];
@@ -149,6 +88,8 @@ function renderCities() {
 		point = wgsToScreen(city.lon, city.lat);
 		ctx.fillText(city.name, point.x, point.y);
 	}
+
+	testPops.sort(function(a, b) { return b - a; });
 }
 
 function setVisibleStates() {
@@ -398,8 +339,6 @@ function renderWsrSites(shp) {
 }
 
 function renderStates(options) {
-	// TODO fill polygons at zoom 9 and larger
-
 	var f, l, coords, startCoords, nextCoords;
 	options = options || {};
 	var start = new Date().getTime();
@@ -429,6 +368,11 @@ function renderStates(options) {
 				}
 			}
 		}
+	}
+
+	if (zoom > 7) {
+		ctx.fillStyle = '#F3F1ED';
+		ctx.fill();
 	}
 
 	ctx.strokeStyle = '#ccc';

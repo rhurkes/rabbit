@@ -38,6 +38,12 @@ function padZero(number) {
 	return (number < 10) ? '0' + number : number.toString();
 }
 
+// TODO find faster approximation
 function distanceBetweenPoints(x1, y1, x2, y2) {
 	return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+}
+
+function isRectangleIntersect(rectA, rectB) {
+	// Check for no overlap condition, then use DeMorgan's Law to invert it
+	return !(rectA.left > rectB.right || rectA.right < rectB.left || rectA.top < rectB.bottom || rectA.bottom > rectB.top);
 }

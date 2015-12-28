@@ -31,7 +31,7 @@ var viewportCenter;
 
 // State
 var moving = false;
-var bounds = {};
+var bounds = { wgs84: {}, wm: {} };
 var debuglines = 0;
 var lastHoverCheck = 0;
 var debugMode = true;
@@ -59,7 +59,7 @@ mapElement.style.width = viewportElement.clientWidth + mapViewportPadding + 'px'
 mapElement.style.height = viewportElement.clientHeight + mapViewportPadding + 'px';
 centerLayersOnViewport();
 
-var zoom = 5;
+var zoom = 9;
 var zoomScale = [
 	156412, 78206, 39103, 19551, 9776, 4888, 2444, 1222, 610.984, 305.492,
 	152.746, 76.373, 38.187, 19.093, 9.547, 4.773, 2.387, 1.193, 0.596, 0.298
@@ -72,8 +72,8 @@ calcDisplayDimensions();
 var center = {
 	'x': viewportElement.clientWidth / 2,
 	'y': viewportElement.clientHeight / 2,
-	'lon': -98,
-	'lat': 40,
+	'lon': -95.57234698241056,
+	'lat': 40.85186990676749,
 	'movedX': 0,
 	'movedY': 0
 };
@@ -124,15 +124,23 @@ function tweakTerrainOffset(input, dimension) {
 			if (dimension === 'x') { return input - 8; }
 			else { return input - 3; }
 			break;
+		case 8:
+			if (dimension === 'x') { return input - 12; }
+			else { return input - 4; }
+			break;
 		default:
 			return input;
 	}
 }
 
 function alignTerrainWithLayerContainer() {
-	// TODO rename bounds properties to be more readable
-	terrainDimensions.offsetWmX = terrainDimensions.topLeftX - bounds.wmx1;
-	terrainDimensions.offsetWmY = bounds.wmy1 - terrainDimensions.topLeftY;
+	if (zoom > 8) {
+		terrainElement.style.display = 'none';
+		return;
+	}
+	terrainElement.style.display = 'block';
+	terrainDimensions.offsetWmX = terrainDimensions.topLeftX - bounds.wm.left;
+	terrainDimensions.offsetWmY = bounds.wm.top - terrainDimensions.topLeftY;
 	terrainDimensions.offsetX = terrainDimensions.offsetWmX / metersPerPixel;
 	terrainDimensions.offsetY = terrainDimensions.offsetWmY / metersPerPixel;
 	terrainElement.style.left = tweakTerrainOffset(terrainDimensions.offsetX, 'x') + 'px';
@@ -289,17 +297,17 @@ function setBounds() {
 	// WGS84 bounds
 	tl = screenToWgs(0, 0);
 	br = screenToWgs(mapElement.clientWidth, mapElement.clientHeight);
-	bounds.lon1 = tl.lon;
-	bounds.lon2 = br.lon;
-	bounds.lat1 = tl.lat;
-	bounds.lat2 = br.lat;
+	bounds.wgs84.left = tl.lon;
+	bounds.wgs84.right = br.lon;
+	bounds.wgs84.top = tl.lat;
+	bounds.wgs84.bottom = br.lat;
 	// Web Mercator bounds for precomputed coordinates
 	tl = wgsToWm(tl.lon, tl.lat);
 	br = wgsToWm(br.lon, br.lat);
-	bounds.wmx1 = tl.x;
-	bounds.wmx2 = br.x;
-	bounds.wmy1 = tl.y;
-	bounds.wmy2 = br.y;
+	bounds.wm.left = tl.x;
+	bounds.wm.right = br.x;
+	bounds.wm.top = tl.y;
+	bounds.wm.bottom = br.y;
 }
 
 function calcDisplayDimensions() {

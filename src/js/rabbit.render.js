@@ -18,11 +18,8 @@
 */
 // Simplify geometry of .0001 seems to be best compromise between performance and precision
 
-/* Bugs / TODO
-	- State not detacted as being visible when it should be: 1240x614, center at -93.088, 39.803, zoom 7, IL not visible
-	- 
-
-*/
+//BUGS:
+//1 - Font changes after first render
 
 // GLOBALS FOR LOOPING
 var f, i, j, k;
@@ -60,44 +57,106 @@ function prepareStateData() {
 }
 
 function renderCities() {
-	if (zoom < 5) { return; }
+	if (zoom < 4) { return; }
 
 	var citiesToRender = [];
-	var city, point;
+	var city, point, filterFunction = function() { return true; }, statePoints, cityLimit, cityCount;
 
-	ctx.font = '12px Arial';
-	ctx.fillStyle = '#FFF';
+	switch (zoom) {
+		case 4:
+			cityLimit = 1;
+			filterFunction = function(checkCity) {
+				if (checkCity.zoom < zoom || (cityCount < cityLimit && checkCity.pop >= 1500000)) {
+					cityCount++;
+					return true;
+				}
+				return false;
+			};
+			break;
+		case 5:
+			cityLimit = 1;
+			filterFunction = function(checkCity) {
+				if (cityCount < cityLimit && checkCity.pop >= 350000) {
+					cityCount++;
+					return true;
+				}
+				return false;
+			};
+			break;
+		case 6:
+			cityLimit = 2;
+			filterFunction = function(checkCity) {
+				if (cityCount < cityLimit && checkCity.pop >= 200000) {
+					cityCount++;
+					return true;
+				}
+				return false;
+			};
+			break;
+		case 7:
+			cityLimit = 10;
+			filterFunction = function(checkCity) {
+				if (cityCount < cityLimit && checkCity.pop >= 100000) {
+					cityCount++;
+					return true;
+				}
+				return false;
+			};
+			break;
+		case 8:
+			filterFunction = function(checkCity) {
+				return checkCity.rank > 0;
+			}
+			break;
+		case 9:
+			filterFunction = function(checkCity) {
+				return checkCity.rank > 0 || checkCity.pop > 5000;
+			}
+			break;
+	}
 
-	for (var i = 0; i < cities.length; i++) {
-		city = cities[i];
+	for (state in visibleStates) {
+		cityCount = 0;
+		statePoints = cities[visibleStates[state]];
+		for (i = 0; i < statePoints.length; i++) {
+			city = statePoints[i];
+			// Zoom overrides
+			if (city.zoom) {
+				if (zoom < city.zoom) { 
+					continue;
+				} else {
+					citiesToRender.push(statePoints[i]);
+				}
+			} else {
+				if (filterFunction(statePoints[i])) {
+					citiesToRender.push(statePoints[i]);
+				}
+			}
+		}
+	}
+
+	ctx.font = '9px Roboto';
+	ctx.fillStyle = '#fff';
+	for (i = 0; i < citiesToRender.length; i++) {
+		city = citiesToRender[i];
+		point = wgsToScreen(city.lon, city.lat);
+		ctx.fillText(city.name, point.x, point.y + 1);
+		console.log(city.name);
+	}
+	ctx.fillStyle = '#000';
+	for (i = 0; i < citiesToRender.length; i++) {
+		city = citiesToRender[i];
 		point = wgsToScreen(city.lon, city.lat);
 		ctx.fillText(city.name, point.x, point.y);
 	}
 }
 
 function setVisibleStates() {
-	// TODO abstract this out?
-	function pointInRectangle(x, y, maxX, minX, maxY, minY) {
-		return (x > maxX && x < minX && y < maxY && y > minY);
-	}
 	visibleStates = [];	// TODO Not globally defined
-	//http://stackoverflow.com/questions/115426/algorithm-to-detect-intersection-of-two-rectangles
-	// TODO vertex checking still doesn't work, need to check intersections of reactangles
 	for (var stateAbbreviation in state_details) {
-		// Check if any bounds vertices are in state
 		var state = state_details[stateAbbreviation];
-		if (pointInRectangle(bounds.lon1, bounds.lat1, state.maxLon, state.minLon, state.maxLat, state.minLat) || 
-			pointInRectangle(bounds.lon1, bounds.lat2, state.maxLon, state.minLon, state.maxLat, state.minLat) || 
-			pointInRectangle(bounds.lon2, bounds.lat1, state.maxLon, state.minLon, state.maxLat, state.minLat) || 
-			pointInRectangle(bounds.lon2, bounds.lat2, state.maxLon, state.minLon, state.maxLat, state.minLat)) {
-				visibleStates.push(state.fips);
-		}
-		// Check if any state vertices are in the bounds
-		else if (pointInRectangle(state.maxLon, state.maxLat, bounds.lon1, bounds.lon2, bounds.lat1, bounds.lat2) ||
-			pointInRectangle(state.maxLon, state.minLat, bounds.lon1, bounds.lon2, bounds.lat1, bounds.lat2) ||
-			pointInRectangle(state.minLon, state.maxLat, bounds.lon1, bounds.lon2, bounds.lat1, bounds.lat2) ||
-			pointInRectangle(state.minLon, state.minLat, bounds.lon1, bounds.lon2, bounds.lat1, bounds.lat2)) {
-				visibleStates.push(state.fips);
+		if (isRectangleIntersect(bounds.wgs84, state)) {
+			visibleStates.push(stateAbbreviation);
 		}
 	}
 }
@@ -339,6 +398,8 @@ function renderWsrSites(shp) {
 }
 
 function renderStates(options) {
+	// TODO fill polygons at zoom 9 and larger
+
 	var f, l, coords, startCoords, nextCoords;
 	options = options || {};
 	var start = new Date().getTime();
@@ -383,20 +444,9 @@ function renderShapefile(shp, options) {
 
 	if (!shp && !shp.features) { return; }
 
-	options = options || {};	
-	if (shp.wmPreComputed) {
-		tmpBounds.top = bounds.wmy1;
-		tmpBounds.bottom = bounds.wmy2;
-		tmpBounds.left = bounds.wmx1;
-		tmpBounds.right = bounds.wmx2;
-		tmpDrawLine = drawLineWm;
-	} else {
-		tmpBounds.top = bounds.lat1;
-		tmpBounds.bottom = bounds.lat2;
-		tmpBounds.left = bounds.lon1;
-		tmpBounds.right = bounds.lon2;
-		tmpDrawLine = drawLine;
-	}
+	options = options || {};
+	tmpBounds = shp.wmPreComputed ? bounds.wm : bounds.wgs84;
+	tmpDrawLine = shp.wmPreComputed ? drawLineWm : drawLine;
 
 	for (i = 0, len = shp.features.length; i < len; i++) {
 		f = shp.features[i];

@@ -61,7 +61,6 @@ function renderCities() {
 
 	var citiesToRender = [];
 	var city, point, filterFunction = function() { return true; }, statePoints, cityLimit, cityCount;
-	testPops = [];
 
 	for (var state in visibleStates) {
 		statePoints = cities[visibleStates[state]];
@@ -69,7 +68,6 @@ function renderCities() {
 			city = statePoints[i];
 			if (city.zoom <= zoom) {
 				citiesToRender.push(statePoints[i]);
-				testPops.push(statePoints[i].pop);
 			}
 		}
 	}
@@ -79,17 +77,18 @@ function renderCities() {
 	for (i = 0; i < citiesToRender.length; i++) {
 		city = citiesToRender[i];
 		point = wgsToScreen(city.lon, city.lat);
-		ctx.fillText(city.name, point.x, point.y + 1);
+		ctx.fillText(city.name, point.x + 5, point.y + 1);
 		console.log(city.name);
 	}
 	ctx.fillStyle = '#000';
 	for (i = 0; i < citiesToRender.length; i++) {
 		city = citiesToRender[i];
 		point = wgsToScreen(city.lon, city.lat);
-		ctx.fillText(city.name, point.x, point.y);
+		ctx.fillText(city.name, point.x + 5, point.y);
+		if (zoom < 9) {
+			ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
+		}
 	}
-
-	testPops.sort(function(a, b) { return b - a; });
 }
 
 function setVisibleStates() {
@@ -373,9 +372,11 @@ function renderStates(options) {
 	if (zoom > 7) {
 		ctx.fillStyle = '#F3F1ED';
 		ctx.fill();
+		ctx.strokeStyle = '#ccc';
+	} else {
+		ctx.strokeStyle = '#666';
 	}
 
-	ctx.strokeStyle = '#ccc';
 	ctx.lineWidth = 1;
 	ctx.setLineDash([5]);
 	ctx.stroke();

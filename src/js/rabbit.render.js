@@ -72,14 +72,7 @@ function renderCities() {
 		}
 	}
 
-	ctx.font = '10px Roboto';
-	ctx.fillStyle = '#fff';
-	for (i = 0; i < citiesToRender.length; i++) {
-		city = citiesToRender[i];
-		point = wgsToScreen(city.lon, city.lat);
-		ctx.fillText(city.name, point.x + 5, point.y + 1);
-		console.log(city.name);
-	}
+	ctx.font = '12px Roboto';
 	ctx.fillStyle = '#000';
 	for (i = 0; i < citiesToRender.length; i++) {
 		city = citiesToRender[i];

@@ -72,14 +72,14 @@ function renderCities() {
 		}
 	}
 
-	ctx.font = '12px Roboto';
+	ctx.font = '10px Roboto';
 	ctx.fillStyle = '#000';
 	for (i = 0; i < citiesToRender.length; i++) {
 		city = citiesToRender[i];
 		point = wgsToScreen(city.lon, city.lat);
-		ctx.fillText(city.name, point.x + 5, point.y);
+		ctx.fillText(city.name, point.x + 2, point.y - 2);
 		if (zoom < 9) {
-			ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
+			ctx.fillRect(point.x - 1, point.y - 1, 2, 2);
 		}
 	}
 }

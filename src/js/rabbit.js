@@ -2,6 +2,7 @@
 	- slight px jump when mouseup event re-renders
 	- fix offset between terrain and shapefile
 	- get rid of center.x/y?
+	- re-render after load to get fonts
 */
 
 /* Performance notes
